@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4CAF50">
+    <title>Мое PWA приложение</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+</head>
+
+<body>
+    <header>
+        <h1>Мое PWA приложение</h1>
+        <div class="status" id="status">Проверка статуса...</div>
+    </header>
+
+    <main>
+        <div class="content">
+            <p>Это пример Progressive Web App без использования фреймворков.</p>
+            <button id="installBtn" style="display: none;">Установить приложение</button>
+
+            <div class="features">
+                <h2>Возможности:</h2>
+                <ul>
+                    <li>✅ Работает офлайн</li>
+                    <li>✅ Быстрая загрузка</li>
+                    <li>✅ Установка на устройство</li>
+                    <li>✅ Пуш-уведомления</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Мое PWA приложение</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
