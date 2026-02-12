@@ -1,14 +1,12 @@
 // sw.js - Service Worker для PWA
 
-const CACHE_NAME = 'my-pwa-v2';
+const CACHE_NAME = 'my-pwa-v3';
 const urlsToCache = [
     './',
     './index.html',
     './styles.css',
     './app.js',
-    './manifest.json',
-    './icons/icon-192x192.png',
-    './icons/icon-512x512.png'
+    './manifest.json'
 ];
 
 // Установка
@@ -19,27 +17,7 @@ self.addEventListener('install', event => {
         caches.open(CACHE_NAME)
             .then(cache => {
                 console.log('Service Worker: кэширование ресурсов');
-                
-                // Проверяем каждый файл по отдельности
-                const promises = urlsToCache.map(url => {
-                    return fetch(url, { method: 'GET' })
-                        .then(response => {
-                            if (response.ok) {
-                                console.log('✅', url, '- OK');
-                                return cache.put(url, response);
-                            } else {
-                                console.warn('⚠️', url, '- не найден (', response.status, ')');
-                                throw new Error(`Файл ${url} вернул статус ${response.status}`);
-                            }
-                        })
-                        .catch(error => {
-                            console.error('❌', url, '-', error.message);
-                            // Пропускаем файл, если он не найден
-                            return Promise.resolve();
-                        });
-                });
-                
-                return Promise.all(promises);
+                return cache.addAll(urlsToCache);
             })
             .then(() => {
                 console.log('Service Worker: установлен');
@@ -74,8 +52,14 @@ self.addEventListener('activate', event => {
 
 // Перехват запросов
 self.addEventListener('fetch', event => {
-    // Игнорируем не-HTTP запросы
+    // Игнорируем не-HTTP запросы (расширения браузера и т.д.)
     if (!event.request.url.startsWith('http')) {
+        return;
+    }
+    
+    // Игнорируем запросы к сторонним доменам
+    if (event.request.url.startsWith('http') && 
+        !event.request.url.startsWith(self.location.origin)) {
         return;
     }
     
@@ -89,20 +73,28 @@ self.addEventListener('fetch', event => {
                 
                 return fetch(event.request).then(
                     response => {
+                        // Проверяем валидность ответа
                         if (!response || response.status !== 200 || response.type !== 'basic') {
                             return response;
                         }
                         
-                        const responseToCache = response.clone();
-                        
-                        caches.open(CACHE_NAME)
-                            .then(cache => {
-                                cache.put(event.request, responseToCache);
-                            });
+                        // Кэшируем только запросы к нашему домену
+                        if (event.request.url.startsWith(self.location.origin)) {
+                            const responseToCache = response.clone();
+                            
+                            caches.open(CACHE_NAME)
+                                .then(cache => {
+                                    cache.put(event.request, responseToCache);
+                                })
+                                .catch(error => {
+                                    console.warn('Не удалось закэшировать:', event.request.url, error);
+                                });
+                        }
                         
                         return response;
                     }
                 ).catch(() => {
+                    // Возвращаем офлайн-страницу для навигационных запросов
                     if (event.request.mode === 'navigate') {
                         return caches.match('./');
                     }
